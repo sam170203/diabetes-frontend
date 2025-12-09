@@ -1,6 +1,6 @@
-"use client"
+"use client";
 
-import { useState } from "react"
+import { useState } from "react";
 
 export default function Home() {
   const [formData, setFormData] = useState({
@@ -12,88 +12,96 @@ export default function Home() {
     bmi: "",
     diabetesPedigreeFunction: "",
     age: "",
-  })
+  });
 
-  const [loading, setLoading] = useState(false)
-  const [result, setResult] = useState(null)
-  const [error, setError] = useState(null)
-  const [invalidFields, setInvalidFields] = useState({})
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  const [invalidFields, setInvalidFields] = useState({});
 
   const handleChange = (e) => {
-    const { name, value } = e.target
+    const { name, value } = e.target;
     setFormData((prev) => ({
       ...prev,
       [name]: value,
-    }))
+    }));
     setInvalidFields((prev) => ({
       ...prev,
       [name]: false,
-    }))
-  }
+    }));
+  };
 
   const validateForm = () => {
-    const newInvalidFields = {}
-    let isValid = true
+    const newInvalidFields = {};
+    let isValid = true;
 
     Object.keys(formData).forEach((key) => {
-      const value = formData[key]
+      const value = formData[key];
       if (value === "" || isNaN(value) || Number(value) < 0) {
-        newInvalidFields[key] = true
-        isValid = false
+        newInvalidFields[key] = true;
+        isValid = false;
       }
-    })
+    });
 
-    setInvalidFields(newInvalidFields)
-    return isValid
-  }
+    setInvalidFields(newInvalidFields);
+    return isValid;
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError(null)
-    setResult(null)
+    e.preventDefault();
+    setError(null);
+    setResult(null);
 
     if (!validateForm()) {
-      setError("Please fill in all fields with valid numeric values.")
-      return
+      setError("Please fill in all fields with valid numeric values.");
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
 
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || "/api/predict"
-      const response = await fetch(apiUrl, {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+
+      if (!apiUrl) {
+        setError("API URL missing — check NEXT_PUBLIC_API_URL in Vercel.");
+        setLoading(false);
+        return;
+      }
+
+      const response = await fetch(`${apiUrl}/predict`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          pregnancies: Number(formData.pregnancies),
-          glucose: Number(formData.glucose),
-          bloodPressure: Number(formData.bloodPressure),
-          skinThickness: Number(formData.skinThickness),
-          insulin: Number(formData.insulin),
-          bmi: Number(formData.bmi),
-          diabetesPedigreeFunction: Number(formData.diabetesPedigreeFunction),
-          age: Number(formData.age),
+          Pregnancies: Number(formData.pregnancies),
+          Glucose: Number(formData.glucose),
+          BloodPressure: Number(formData.bloodPressure),
+          SkinThickness: Number(formData.skinThickness),
+          Insulin: Number(formData.insulin),
+          BMI: Number(formData.bmi),
+          DiabetesPedigreeFunction: Number(formData.diabetesPedigreeFunction),
+          Age: Number(formData.age),
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error("API request failed")
+        throw new Error("API request failed");
       }
 
-      const data = await response.json()
+      const data = await response.json();
+
       setResult({
         prediction: data.prediction === 1 ? "Diabetic" : "Not Diabetic",
         probability: Math.round(data.probability * 100),
-      })
+      });
     } catch (err) {
-      setError("Failed to get prediction. Please check your API endpoint and try again.")
-      console.error("Error:", err)
+      console.error(err);
+      setError("Failed to get prediction. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 flex items-center justify-center p-4 relative overflow-hidden">
@@ -105,8 +113,12 @@ export default function Home() {
       <div className="w-full max-w-4xl relative z-10 animate-fade-in">
         <div className="backdrop-blur-2xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl p-8 md:p-12">
           <div className="mb-8 text-center">
-            <h1 className="text-5xl md:text-6xl font-bold text-white mb-3 text-balance">Diabetes Prediction</h1>
-            <p className="text-lg text-blue-100">Enter your health metrics to predict diabetes risk with advanced ML</p>
+            <h1 className="text-5xl md:text-6xl font-bold text-white mb-3 text-balance">
+              Diabetes Prediction
+            </h1>
+            <p className="text-lg text-blue-100">
+              Enter your health metrics to predict diabetes risk with advanced ML
+            </p>
           </div>
 
           {error && (
@@ -126,20 +138,26 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <div
                   className={`w-3 h-3 rounded-full ${
-                    result.prediction === "Diabetic" ? "bg-orange-400" : "bg-green-400"
+                    result.prediction === "Diabetic"
+                      ? "bg-orange-400"
+                      : "bg-green-400"
                   }`}
                 ></div>
                 <div>
                   <p
                     className={`text-lg font-bold ${
-                      result.prediction === "Diabetic" ? "text-orange-100" : "text-green-100"
+                      result.prediction === "Diabetic"
+                        ? "text-orange-100"
+                        : "text-green-100"
                     }`}
                   >
                     Prediction: {result.prediction}
                   </p>
                   <p
                     className={`text-sm mt-1 ${
-                      result.prediction === "Diabetic" ? "text-orange-200" : "text-green-200"
+                      result.prediction === "Diabetic"
+                        ? "text-orange-200"
+                        : "text-green-200"
                     }`}
                   >
                     Probability: {result.probability}%
@@ -183,7 +201,9 @@ export default function Home() {
                     }`}
                   />
                   {invalidFields[field.name] && (
-                    <p className="text-red-300 text-xs mt-2 font-medium">Please enter a valid number</p>
+                    <p className="text-red-300 text-xs mt-2 font-medium">
+                      Please enter a valid number
+                    </p>
                   )}
                 </div>
               ))}
@@ -207,7 +227,8 @@ export default function Home() {
 
           <div className="mt-10 pt-8 border-t border-white/10">
             <p className="text-center text-sm text-blue-100/80 font-medium">
-              ⚕️ Always consult a healthcare professional for medical advice. This is a prediction tool only.
+              ⚕️ Always consult a healthcare professional for medical advice.
+              This is a prediction tool only.
             </p>
           </div>
         </div>
@@ -230,5 +251,5 @@ export default function Home() {
         }
       `}</style>
     </main>
-  )
+  );
 }
